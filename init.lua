@@ -35,15 +35,34 @@ minetest.register_node("teleport_sd:teleport_dst", {
 	paramtype = "light",
 	light_source = 10,
 
-	-- TODO: add formspec to clear owner, allow any src to teleport to dst's that lack an owner
-
-	-- TODO: add formspec to set player's yaw after teleport (in degrees from 0-359)
-
 	after_place_node = function(pos, placer)
 		local meta = minetest.get_meta(pos)
 		if meta ~= nil then
 			meta:set_string("owner", placer:get_player_name() or "")
+			meta:set_int("yaw", 0)
 			teleport_sd.set_dst_infotext(meta, pos)
+		end
+	end,
+
+	-- configure yaw and owner
+	on_rightclick = function(pos, node, clicker, itemstack)
+		if minetest.is_protected(pos, clicker:get_player_name()) then return end
+
+		local meta = minetest.get_meta(pos)
+		if meta ~= nil then
+			local toggle_owner_button = nil
+			if meta:get_string("owner") ~= "" then
+				toggle_owner_button = "button_exit[0.1,2;7.8,0.5;clr_owner;Teleport is ONLY allowed from owner's source teleporters]"
+			else
+				toggle_owner_button = "button_exit[0.75,2;6.5,0.5;set_owner;Teleport is allowed from ANY source teleporter]"
+			end
+			minetest.show_formspec(clicker:get_player_name(), "teleport_sd:node_"..minetest.pos_to_string(pos),
+				"size[8,4]"..default.gui_bg..default.gui_bg_img
+				.."label[1.3,0;Enter player's yaw after teleport (0 to 359)]"
+				.."field[2.75,1;3,0.5;yaw;;"..meta:get_int("yaw").."]"
+				..toggle_owner_button
+				.."button_exit[0.95,3.5;3,0.5;save;Save]"
+				.."button_exit[4.05,3.5;3,0.5;cancel;Cancel]")
 		end
 	end
 })
@@ -179,7 +198,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	local meta = minetest.get_meta(pos)
 	if meta == nil then return end
 
-	if fields.text ~= nil and not fields.cancel then
+	if fields.cancel then return end
+
+	if fields.text ~= nil then
+		-- Source Block
 		-- save destination position
 		if player:get_player_name() == meta:get_string("owner") then
 			local dst_pos = teleport_sd.parse_coords(fields.text)
@@ -190,6 +212,25 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 				meta:set_int("z", dst_pos.z)
 			end
 		end
+	elseif fields.yaw ~= nil then
+		-- Destination Block
+		if fields.clr_owner then
+			-- clear owner
+			meta:set_string("owner", "")
+			teleport_sd.set_dst_infotext(meta, pos)
+		elseif fields.set_owner then
+			-- set owner
+			meta:set_string("owner", player:get_player_name() or "")
+			teleport_sd.set_dst_infotext(meta, pos)
+		end
+		-- set yaw
+		local yaw = tonumber(fields.yaw)
+		if yaw < 0 then
+			yaw = 0
+		elseif yaw > 359 then
+			yaw = 359
+		end
+		meta:set_int("yaw", yaw)
 	end
 end)
 
@@ -222,8 +263,8 @@ teleport_sd.teleport_player_to_dst = function(src_pos, player, dst_pos, elapsed)
 		-- get src and dst meta
 		local src_meta = minetest.get_meta(src_pos)
 		local dst_meta = minetest.get_meta(dst_pos)
-		-- verify src and dst have same owner
-		if src_meta ~= nil and dst_meta ~= nil and src_meta:get_string("owner") == dst_meta:get_string("owner") then
+		-- verify src and dst have same owner or dst has no owner
+		if src_meta ~= nil and dst_meta ~= nil and (src_meta:get_string("owner") == dst_meta:get_string("owner") or dst_meta:get_string("owner") == "") then
 			-- verify dst node has 2 air blocks above it
 			if above_node1.name == "air" and above_node2.name == "air" then
 				-- teleport player
@@ -232,10 +273,10 @@ teleport_sd.teleport_player_to_dst = function(src_pos, player, dst_pos, elapsed)
 				minetest.sound_play("portal_close", {pos = src_pos, gain = 1.0, max_hear_distance = 5})
 				teleport_sd.spawn_particles(src_pos, 2.3, -1, 1.7)
 
-				-- TODO: position and pitch don't always sync to client
+				-- TODO: position, pitch and yaw don't always sync to client
 				player:setpos(tp_pos)
 				player:set_look_pitch(0)
---				player:set_look_yaw(dst_meta:get_int("yaw")*0.0174533)
+				player:set_look_yaw(dst_meta:get_int("yaw")*0.0174533)
 
 				minetest.sound_play("portal_close", {pos = dst_pos, gain = 1.0, max_hear_distance = 5})
 				teleport_sd.spawn_particles(dst_pos, 0.5, 1, 1.7)
