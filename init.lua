@@ -53,16 +53,17 @@ minetest.register_node("teleport_sd:teleport_dst", {
 			local toggle_owner_button = nil
 			if meta:get_string("owner") ~= "" then
 				toggle_owner_button = "button_exit[0.1,2;7.8,0.5;clr_owner;Teleport is ONLY allowed from owner's source teleporters]"
+					.."label[1,2.75;Owner: "..meta:get_string("owner").."]"
 			else
 				toggle_owner_button = "button_exit[0.75,2;6.5,0.5;set_owner;Teleport is allowed from ANY source teleporter]"
 			end
 			minetest.show_formspec(clicker:get_player_name(), "teleport_sd:node_"..minetest.pos_to_string(pos),
-				"size[8,4]"..default.gui_bg..default.gui_bg_img
+				"size[8,4.5]"..default.gui_bg..default.gui_bg_img
 				.."label[1.3,0;Enter player's yaw after teleport (0 to 359)]"
 				.."field[2.75,1;3,0.5;yaw;;"..meta:get_int("yaw").."]"
 				..toggle_owner_button
-				.."button_exit[0.95,3.5;3,0.5;save;Save]"
-				.."button_exit[4.05,3.5;3,0.5;cancel;Cancel]")
+				.."button_exit[0.95,4;3,0.5;save;Save]"
+				.."button_exit[4.05,4;3,0.5;cancel;Cancel]")
 		end
 	end
 })
@@ -113,12 +114,18 @@ minetest.register_node("teleport_sd:teleport_src", {
 
 		local meta = minetest.get_meta(pos)
 		if meta ~= nil then
+			local change_owner_button = ""
+			if meta:get_string("owner") ~= clicker:get_player_name() then
+				change_owner_button = "button_exit[1,2;6,0.5;set_owner;Change Owner]"
+			end
 			minetest.show_formspec(clicker:get_player_name(), "teleport_sd:node_"..minetest.pos_to_string(pos),
-				"size[8,3]"..default.gui_bg..default.gui_bg_img
+				"size[8,4.5]"..default.gui_bg..default.gui_bg_img
 				.."label[0.25,0;Enter coordinates of destination teleport node (e.g 100,20,-300)]"
 				.."field[2.75,1;3,0.5;coords;;"..meta:get_int("x")..", "..meta:get_int("y")..", "..meta:get_int("z").."]"
-				.."button_exit[0.95,2.5;3,0.5;save;Save]"
-				.."button_exit[4.05,2.5;3,0.5;cancel;Cancel]")
+				..change_owner_button
+				.."label[1,2.75;Owner: "..meta:get_string("owner").."]"
+				.."button_exit[0.95,4;3,0.5;save;Save]"
+				.."button_exit[4.05,4;3,0.5;cancel;Cancel]")
 		end
 	end,
 
@@ -201,6 +208,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	if fields.coords ~= nil then
 		-- Source Block
+		if fields.set_owner then
+			-- change owner
+			meta:set_string("owner", player:get_player_name() or "")
+		end
 		-- set destination position
 		local dst_pos = teleport_sd.parse_coords(fields.coords)
 		if dst_pos ~= nil then
