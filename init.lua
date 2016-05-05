@@ -97,7 +97,6 @@ minetest.register_node("teleport_sd:teleport_src", {
 			meta:set_int("x", 0)
 			meta:set_int("y", 0)
 			meta:set_int("z", 0)
-			meta:set_string("text", "0,0,0")
 		end
 	end,
 
@@ -117,7 +116,7 @@ minetest.register_node("teleport_sd:teleport_src", {
 			minetest.show_formspec(clicker:get_player_name(), "teleport_sd:node_"..minetest.pos_to_string(pos),
 				"size[8,3]"..default.gui_bg..default.gui_bg_img
 				.."label[0.25,0;Enter coordinates of destination teleport node (e.g 100,20,-300)]"
-				.."field[2.75,1;3,0.5;text;;"..meta:get_int("x")..", "..meta:get_int("y")..", "..meta:get_int("z").."]"
+				.."field[2.75,1;3,0.5;coords;;"..meta:get_int("x")..", "..meta:get_int("y")..", "..meta:get_int("z").."]"
 				.."button_exit[0.95,2.5;3,0.5;save;Save]"
 				.."button_exit[4.05,2.5;3,0.5;cancel;Cancel]")
 		end
@@ -200,10 +199,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	if fields.cancel then return end
 
-	if fields.text ~= nil then
+	if fields.coords ~= nil then
 		-- Source Block
 		-- set destination position
-		local dst_pos = teleport_sd.parse_coords(fields.text)
+		local dst_pos = teleport_sd.parse_coords(fields.coords)
 		if dst_pos ~= nil then
 			teleport_sd.set_src_infotext(meta, pos, dst_pos)
 			meta:set_int("x", dst_pos.x)
