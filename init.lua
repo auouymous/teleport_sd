@@ -113,7 +113,7 @@ minetest.register_node("teleport_sd:teleport_src", {
 		if minetest.is_protected(pos, clicker:get_player_name()) then return end
 
 		local meta = minetest.get_meta(pos)
-		if meta ~= nil and clicker:get_player_name() == meta:get_string("owner") then
+		if meta ~= nil then
 			minetest.show_formspec(clicker:get_player_name(), "teleport_sd:node_"..minetest.pos_to_string(pos),
 				"size[8,3]"..default.gui_bg..default.gui_bg_img
 				.."label[0.25,0;Enter coordinates of destination teleport node (e.g 100,20,-300)]"
@@ -202,15 +202,13 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	if fields.text ~= nil then
 		-- Source Block
-		-- save destination position
-		if player:get_player_name() == meta:get_string("owner") then
-			local dst_pos = teleport_sd.parse_coords(fields.text)
-			if dst_pos ~= nil then
-				teleport_sd.set_src_infotext(meta, pos, dst_pos)
-				meta:set_int("x", dst_pos.x)
-				meta:set_int("y", dst_pos.y)
-				meta:set_int("z", dst_pos.z)
-			end
+		-- set destination position
+		local dst_pos = teleport_sd.parse_coords(fields.text)
+		if dst_pos ~= nil then
+			teleport_sd.set_src_infotext(meta, pos, dst_pos)
+			meta:set_int("x", dst_pos.x)
+			meta:set_int("y", dst_pos.y)
+			meta:set_int("z", dst_pos.z)
 		end
 	elseif fields.yaw ~= nil then
 		-- Destination Block
