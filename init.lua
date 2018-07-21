@@ -31,7 +31,8 @@ minetest.register_node("teleport_sd:teleport_dst", {
 	description = "Teleport Destination",
 	tiles = {"teleport_sd_S.png"},
 	sounds = default.node_sound_stone_defaults(),
-	groups = {dig_immediate=2},
+	groups = {dig_immediate = 2},
+	is_ground_content = false,
 	paramtype = "light",
 	light_source = 10,
 
@@ -65,7 +66,9 @@ minetest.register_node("teleport_sd:teleport_dst", {
 				.."button_exit[0.95,4;3,0.5;save;Save]"
 				.."button_exit[4.05,4;3,0.5;cancel;Cancel]")
 		end
-	end
+	end,
+
+	on_blast = function(pos, intensity) end -- immune to explosions
 })
 
 minetest.register_craft({
@@ -87,7 +90,8 @@ minetest.register_node("teleport_sd:teleport_src", {
 	tiles = {{name="teleport_sd_U_anim.png", animation={type="vertical_frames", aspect_w=16, aspect_h=16, length=4}},
 			"teleport_sd_S.png","teleport_sd_S.png","teleport_sd_S.png","teleport_sd_S.png","teleport_sd_S.png"},
 	sounds = default.node_sound_stone_defaults(),
-	groups = {dig_immediate=2},
+	groups = {dig_immediate = 2},
+	is_ground_content = false,
 	paramtype = "light",
 	light_source = 10,
 
@@ -182,7 +186,9 @@ minetest.register_node("teleport_sd:teleport_src", {
 			end
 		end
 		teleport_sd.wait_queue[pos_key] = nil
-	end
+	end,
+
+	on_blast = function(pos, intensity) end -- immune to explosions
 })
 
 minetest.register_craft({
@@ -202,7 +208,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if minetest.is_protected(pos, player:get_player_name()) then return end
 
 	local meta = minetest.get_meta(pos)
-	if meta == nil then return end
+	if not meta then return end
 
 	if fields.cancel then return end
 
@@ -253,7 +259,7 @@ teleport_sd.teleport_player_to_dst = function(src_pos, player, dst_pos, elapsed)
 	local above_node2 = minetest.get_node_or_nil({x=dst_pos.x, y=dst_pos.y+2, z=dst_pos.z})
 
 	-- force load destination nodes and wait
-	if dst_node == nil or above_node2 == nil then
+	if not dst_node or not above_node2 then
 		if elapsed >= teleport_sd.timeout_wait then
 			minetest.chat_send_player(player:get_player_name(), teleport_sd.msg_load_error)
 		else
@@ -305,13 +311,13 @@ end
 teleport_sd.forceload_and_wait_for_dst = function(src_pos, player, dst_pos, elapsed)
 	-- get node timer for source block
 	local timer = minetest.get_node_timer(src_pos)
-	if timer == nil then
+	if not timer then
 		minetest.chat_send_player(player:get_player_name(), teleport_sd.msg_timer_error)
 	else
 		if elapsed == 0 then
 			-- force load destination
-			minetest.forceload_block(dst_pos)
-			minetest.forceload_block({x=dst_pos.x, y=dst_pos.y+2, z=dst_pos.z})
+			minetest.forceload_block(dst_pos, true)
+			minetest.forceload_block({x=dst_pos.x, y=dst_pos.y+2, z=dst_pos.z}, true)
 --			minetest.chat_send_player(player:get_player_name(), '[TELEPORT] LOAD')  
 		end
 
@@ -332,8 +338,8 @@ teleport_sd.forceload_and_wait_for_dst = function(src_pos, player, dst_pos, elap
 end
 
 teleport_sd.remove_forceloaders = function(dst_pos)
-	minetest.forceload_free_block(dst_pos)
-	minetest.forceload_free_block({x=dst_pos.x, y=dst_pos.y+2, z=dst_pos.z})
+	minetest.forceload_free_block(dst_pos, true)
+	minetest.forceload_free_block({x=dst_pos.x, y=dst_pos.y+2, z=dst_pos.z}, true)
 end
 
 teleport_sd.remove_src_wait_queue_if_empty = function(src_pos)
