@@ -15,3 +15,5 @@ Links
 [Download](https://github.com/auouymous/teleport_sd/archive/master.zip)
 
 [Youtube Video](https://www.youtube.com/watch?v=HWnRZpLZX5k)
+
+[Forum Post](https://forum.minetest.net/viewtopic.php?f=9&t=14710)
