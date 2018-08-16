@@ -16,4 +16,4 @@ Links
 
 [Youtube Video](https://www.youtube.com/watch?v=HWnRZpLZX5k)
 
-[Forum Post](https://forum.minetest.net/viewtopic.php?f=9&t=14710)
+[Forum Post](https://forum.minetest.net/viewtopic.php?t=14710)
