@@ -137,7 +137,7 @@ minetest.register_node("teleport_sd:teleport_src", {
 	on_punch = function(pos, node, puncher)
 		local meta = minetest.get_meta(pos)
 		if meta ~= nil then
-			local player_pos = puncher:getpos()
+			local player_pos = puncher:get_pos()
 			if player_pos.y >= pos.y+0.5 and teleport_sd.round(player_pos.x) == pos.x and teleport_sd.round(player_pos.z) == pos.z then
 				teleport_sd.teleport_player_to_dst(pos, puncher, {x=meta:get_int("x"), y=meta:get_int("y"), z=meta:get_int("z")}, 0)
 			end
