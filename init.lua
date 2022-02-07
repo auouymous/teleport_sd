@@ -288,9 +288,9 @@ teleport_sd.teleport_player_to_dst = function(src_pos, player, dst_pos, elapsed)
 				teleport_sd.spawn_particles(src_pos, 2.3, -1, 1.7)
 
 				-- TODO: position, pitch and yaw don't always sync to client
-				player:setpos(tp_pos)
-				player:set_look_pitch(0)
-				player:set_look_yaw(dst_meta:get_int("yaw")*0.0174533)
+				player:set_pos(tp_pos)
+				player:set_look_vertical(0)
+				player:set_look_horizontal(dst_meta:get_int("yaw")*0.0174533)
 
 				minetest.sound_play("portal_close", {pos = dst_pos, gain = 1.0, max_hear_distance = 5})
 				teleport_sd.spawn_particles(dst_pos, 0.5, 1, 1.7)
